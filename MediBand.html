@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>温度と湿度 | Temperature & Humidity</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        .logo-container { margin-bottom: 20px; }
+        .logo { width: 150px; height: auto; }
+        button { padding: 10px; font-size: 16px; margin: 10px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="logo-container">
+        <img src="mediband_logo.png" alt="Product Logo" class="logo">
+    </div>
+
+    <h1 id="title">温度と湿度</h1>
+    <p id="description">現在の温度と湿度を表示します。</p>
+
+    <p><strong id="temp-label">温度:</strong> <span id="temp">--</span>°C</p>
+    <p><strong id="humidity-label">湿度:</strong> <span id="humidity">--</span>%</p>
+
+    <button id="connect-button" onclick="selectBLEDevice()">Bluetooth接続</button>
+    <button id="lang-button" onclick="toggleLanguage()">🇬🇧 Switch to English</button>
+
+    <script>
+        let currentLang = "ja";
+
+        function toggleLanguage() {
+            if (currentLang === "ja") {
+                currentLang = "en";
+                document.getElementById("title").textContent = "Temperature & Humidity";
+                document.getElementById("description").textContent = "Displaying current temperature and humidity.";
+                document.getElementById("temp-label").textContent = "Temperature: ";
+                document.getElementById("humidity-label").textContent = "Humidity: ";
+                document.getElementById("connect-button").textContent = "Connect Bluetooth";
+                document.getElementById("lang-button").textContent = "日本語へ切り替え";
+            } else {
+                currentLang = "ja";
+                document.getElementById("title").textContent = "温度と湿度";
+                document.getElementById("description").textContent = "現在の温度と湿度を表示します。";
+                document.getElementById("temp-label").textContent = "温度: ";
+                document.getElementById("humidity-label").textContent = "湿度: ";
+                document.getElementById("connect-button").textContent = "Bluetooth接続";
+                document.getElementById("lang-button").textContent = "Switch to English";
+            }
+        }
+
+        async function selectBLEDevice() {
+            try {
+                const device = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true, // すべてのBLEデバイスを選択可能に
+                    optionalServices: [0x181A] // 環境測定サービス
+                });
+
+                connectToBLE(device);
+            } catch (error) {
+                console.error(error);
+                alert(currentLang === "ja" ? "デバイス選択がキャンセルされました。" : "Device selection was canceled.");
+            }
+        }
+
+        async function connectToBLE(device) {
+            try {
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService(0x181A);
+                
+                const tempChar = await service.getCharacteristic(0x2A6E);
+                const humidityChar = await service.getCharacteristic(0x2A6F);
+
+                tempChar.addEventListener('characteristicvaluechanged', event => {
+                    const tempValue = event.target.value.getUint16(0, true) / 100;
+                    document.getElementById("temp").textContent = tempValue.toFixed(2);
+                });
+
+                humidityChar.addEventListener('characteristicvaluechanged', event => {
+                    const humidityValue = event.target.value.getUint16(0, true) / 100;
+                    document.getElementById("humidity").textContent = humidityValue.toFixed(2);
+                });
+
+                await tempChar.startNotifications();
+                await humidityChar.startNotifications();
+
+                alert(currentLang === "ja" ? "BLE接続成功！" : "Bluetooth connected successfully!");
+
+            } catch (error) {
+                console.error(error);
+                alert(currentLang === "ja" ? "BLE接続に失敗しました。" : "Failed to connect Bluetooth.");
+            }
+        }
+    </script>
+
+</body>
+</html>

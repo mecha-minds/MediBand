@@ -53,13 +53,13 @@
 
         async function selectBLEDevice() {
             try {
-                // const device = await navigator.bluetooth.requestDevice({
-                //     acceptAllDevices: true,
-                //     optionalServices: ["6E400001-B5A3-F393-E0A9-E50E24DCCA9E"] // Nordic UART Service (NUS)
-                    const device = await navigator.bluetooth.requestDevice({
-                        filters: [{ name: "Smart Bandage" }],
-                        optionalServices: [0x180D, 0x181A] // 追加のサービスを指定
-
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ name: "Smart Bandage" }],
+                    optionalServices: [
+                        "6e400001-b5a3-f393-e0a9-e50e24dcca9e",  // BLE UARTサービスのUUID
+                        "180D",  // 温湿度サービスのUUID（例: 温度・湿度関連）
+                        "181A"   // 追加サービス（必要に応じて）
+                    ]
                 });
 
                 connectToBLE(device);
@@ -72,8 +72,8 @@
         async function connectToBLE(device) {
             try {
                 const server = await device.gatt.connect();
-                const service = await server.getPrimaryService("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
-                const characteristic = await service.getCharacteristic("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
+                const service = await server.getPrimaryService("6e400001-b5a3-f393-e0a9-e50e24dcca9e");  // UARTサービス
+                const characteristic = await service.getCharacteristic("6e400003-b5a3-f393-e0a9-e50e24dcca9e");  // データ取得用キャラクタリスティック
 
                 // データ受信イベント
                 characteristic.addEventListener("characteristicvaluechanged", event => {

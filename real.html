@@ -72,8 +72,8 @@
         async function connectToBLE(device) {
             try {
                 const server = await device.gatt.connect();
-                const service = await server.getPrimaryService("6E400001-B5A3-F393-E0A9-E50E24DCCA9E");
-                const characteristic = await service.getCharacteristic("6E400003-B5A3-F393-E0A9-E50E24DCCA9E");
+                const service = await server.getPrimaryService("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
+                const characteristic = await service.getCharacteristic("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
 
                 // データ受信イベント
                 characteristic.addEventListener("characteristicvaluechanged", event => {

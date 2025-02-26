@@ -53,9 +53,13 @@
 
         async function selectBLEDevice() {
             try {
-                const device = await navigator.bluetooth.requestDevice({
-                    acceptAllDevices: true,
-                    optionalServices: ["6E400001-B5A3-F393-E0A9-E50E24DCCA9E"] // Nordic UART Service (NUS)
+                // const device = await navigator.bluetooth.requestDevice({
+                //     acceptAllDevices: true,
+                //     optionalServices: ["6E400001-B5A3-F393-E0A9-E50E24DCCA9E"] // Nordic UART Service (NUS)
+                    const device = await navigator.bluetooth.requestDevice({
+                        filters: [{ name: "Smart Bandage" }],
+                        optionalServices: [0x180D, 0x181A] // 追加のサービスを指定
+
                 });
 
                 connectToBLE(device);

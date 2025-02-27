@@ -133,11 +133,11 @@
             data: {
                 labels: labels,
                 datasets: [
-                    { label: '温度 (°C)', data: tempData, borderColor: 'red', backgroundColor: 'rgba(255, 0, 0, 0.1)', tension: 0.1 },
-                    { label: '湿度 (%)', data: humidityData, borderColor: 'blue', backgroundColor: 'rgba(0, 0, 255, 0.1)', tension: 0.1 }
+                    { label: 'Temperature (°C)', data: tempData, borderColor: 'red', backgroundColor: 'rgba(255, 0, 0, 0.1)', tension: 0.1 },
+                    { label: 'Humidity (%)', data: humidityData, borderColor: 'blue', backgroundColor: 'rgba(0, 0, 255, 0.1)', tension: 0.1 }
                 ]
             },
-            options: { scales: { x: { title: { display: true, text: '時間' } }, y: { min: 0, max: 100 } } }
+            options: { scales: { x: { title: { display: true, text: 'time' } }, y: { min: 0, max:50  } } }
         });
 
         function updateChart(time, temperature, humidity) {

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediBand</title>
+    <link rel="icon" href="mediband_logo.png" type="image/png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        .logo-container { margin-bottom: 20px; }
+        .logo { width: 150px; height: auto; }
+        button { padding: 10px; font-size: 16px; margin: 10px; cursor: pointer; }
+        .chart-container { width: 80%; margin: auto; }
+    </style>
+</head>
+<body>
+
+    <div class="logo-container">
+        <img src="mediband_logo.png" alt="Product Logo" class="logo">
+    </div>
+
+    <h1 id="title">温度と湿度</h1>
+    <p id="description">現在の温度と湿度を表示します。</p>
+
+    <p><strong id="temp-label">温度:</strong> <span id="temp">--</span>°C</p>
+    <p><strong id="humidity-label">湿度:</strong> <span id="humidity">--</span>%</p>
+
+    <button id="connect-button" onclick="selectBLEDevice()">Bluetooth接続</button>
+    <button id="lang-button" onclick="toggleLanguage()">Switch to English</button>
+
+    <!-- グラフ用のキャンバス -->
+    <div class="chart-container">
+        <canvas id="sensorChart"></canvas>
+    </div>
+
+    <script>
+        let currentLang = "ja";
+        let tempData = [];
+        let humidityData = [];
+        let labels = [];
+
+        function toggleLanguage() {
+            if (currentLang === "ja") {
+                currentLang = "en";
+                document.getElementById("title").textContent = "Temperature & Humidity";
+                document.getElementById("description").textContent = "Displaying current temperature and humidity.";
+                document.getElementById("temp-label").textContent = "Temperature: ";
+                document.getElementById("humidity-label").textContent = "Humidity: ";
+                document.getElementById("connect-button").textContent = "Connect Bluetooth";
+                document.getElementById("lang-button").textContent = "日本語へ切り替え";
+            } else {
+                currentLang = "ja";
+                document.getElementById("title").textContent = "温度と湿度";
+                document.getElementById("description").textContent = "現在の温度と湿度を表示します。";
+                document.getElementById("temp-label").textContent = "温度: ";
+                document.getElementById("humidity-label").textContent = "湿度: ";
+                document.getElementById("connect-button").textContent = "Bluetooth接続";
+                document.getElementById("lang-button").textContent = "Switch to English";
+            }
+        }
+
+        async function selectBLEDevice() {
+            try {
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ name: "Smart Bandage" }],
+                    optionalServices: [
+                        "6e400001-b5a3-f393-e0a9-e50e24dcca9e", 
+                        "0000180d-0000-1000-8000-00805f9b34fb", 
+                        "0000181a-0000-1000-8000-00805f9b34fb"  
+                    ]
+                });
+
+                connectToBLE(device);
+            } catch (error) {
+                console.error(error);
+                alert(currentLang === "ja" ? "デバイス選択がキャンセルされました。" : "Device selection was canceled.");
+            }
+        }
+
+        async function connectToBLE(device) {
+            try {
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
+                const characteristic = await service.getCharacteristic("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
+
+                characteristic.addEventListener("characteristicvaluechanged", event => {
+                    let decoder = new TextDecoder("utf-8");
+                    let data = decoder.decode(event.target.value).trim();
+                    console.log("受信データ:", data);
+
+                    let values = data.split(",");
+                    if (values.length === 2) {
+                        let temperature = parseFloat(values[0]);
+                        let humidity = parseFloat(values[1]);
+                        let now = new Date().toLocaleTimeString();
+
+                        document.getElementById("temp").textContent = temperature + "°C";
+                        document.getElementById("humidity").textContent = humidity + "%";
+
+                        updateChart(now, temperature, humidity);
+                    }
+                });
+
+                await characteristic.startNotifications();
+                alert(currentLang === "ja" ? "BLE接続成功！" : "Bluetooth connected successfully!");
+
+            } catch (error) {
+                console.error(error);
+                alert(currentLang === "ja" ? "BLE接続に失敗しました。" : "Failed to connect Bluetooth.");
+            }
+        }
+
+        // グラフの初期化
+        const ctx = document.getElementById('sensorChart').getContext('2d');
+        const sensorChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: '温度 (°C)',
+                        data: tempData,
+                        borderColor: 'red',
+                        backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                        tension: 0.1
+                    },
+                    {
+                        label: '湿度 (%)',
+                        data: humidityData,
+                        borderColor: 'blue',
+                        backgroundColor: 'rgba(0, 0, 255, 0.1)',
+                        tension: 0.1
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    x: { title: { display: true, text: '時間' } },
+                    y: { title: { display: true, text: '値' }, min: 0, max: 100 }
+                }
+            }
+        });
+
+        // グラフを更新する関数
+        function updateChart(time, temperature, humidity) {
+            if (labels.length >= 20) {
+                labels.shift();
+                tempData.shift();
+                humidityData.shift();
+            }
+
+            labels.push(time);
+            tempData.push(temperature);
+            humidityData.push(humidity);
+
+            sensorChart.update();
+        }
+    </script>
+
+</body>
+</html>

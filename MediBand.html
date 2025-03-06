@@ -32,7 +32,7 @@
     <button id="lang-button" onclick="toggleLanguage()">Switch to English</button>
 
     <div>
-        <label>グラフ表示</label>
+        <label id = "graph-botton">グラフ表示</label>
         <select> id = "graph-select" onchange = "updateGraphType()">
             <option id = "both">温度と湿度</option>
             <option id = "temperature-only">温度のみ</option>
@@ -66,6 +66,7 @@
                 document.getElementById("both").textContent = "両方";
                 document.getElementById("temperature-only").textContent = "温度";
                 document.getElementById("humidity-only").textContent = "湿度";
+                document.getElementById("graph-botton").textContent = "グラフを表示";
             } else {
                 currentLang = "ja";
                 document.getElementById("title").textContent = "温度と湿度";
@@ -78,6 +79,7 @@
                 document.getElementById("both").textContent = "Both";
                 document.getElementById("temperature-only").textContent = "Temperature";
                 document.getElementById("humidity-only").textContent = "Humidity";
+                document.getElementById("graph-botton").textContent = "Show Graph";
             }
         }
 

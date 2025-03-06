@@ -281,7 +281,7 @@
             if (device && device.gatt.connected) {
                 device.gatt.disconnect();
                 alert("Bluetooth接続を切断しました。");
-                BLEcond = "off";
+                BLEcond = "on";
                 return;
             }
             try {
@@ -315,7 +315,7 @@
                     }
                 });
                 await characteristic.startNotifications();
-                BLEcond = "on";
+                BLEcond = "off";
                 alert("Bluetooth接続成功！");
             } catch (error) {
                 console.error(error);

@@ -15,7 +15,6 @@
     </style>
 </head>
 <body>
-
     <div class="logo-container">
         <img src="mediband_logo.png" alt="Product Logo" class="logo">
     </div>
@@ -23,62 +22,59 @@
     <h1 id="title">温度と湿度</h1>
     <p id="description">現在の温度と湿度を表示します。</p>
 
-    <button onclick="setGraphMode('both')">温度と湿度</button>
-    <button onclick="setGraphMode('temperature')">温度のみ</button>
-    <button onclick="setGraphMode('humidity')">湿度のみ</button>
+    <p><strong id="temp-label">温度:</strong> <span id="temp">--</span>°C</p>
+    <p><strong id="humidity-label">湿度:</strong> <span id="humidity">--</span>%</p>
+
+    <button onclick="selectBLEDevice()">Bluetooth接続</button>
+    <button onclick="toggleLogging()">記録開始</button>
+    <button onclick="exportCSV()">CSVダウンロード</button>
+    <button onclick="toggleLanguage()">Switch to English</button>
+
+    <div>
+        <label>グラフ表示:</label>
+        <select id="graph-select" onchange="updateGraphType()">
+            <option value="both">温度と湿度</option>
+            <option value="temperature">温度のみ</option>
+            <option value="humidity">湿度のみ</option>
+        </select>
+    </div>
 
     <div class="chart-container">
-        <canvas id="temperatureChart"></canvas>
-    </div>
-    <div class="chart-container">
-        <canvas id="humidityChart"></canvas>
+        <canvas id="sensorChart"></canvas>
     </div>
 
     <script>
+        let currentLang = "ja";
+        let logging = false;
+        let labels = new Array(20).fill("--");
         let tempData = new Array(20).fill(0);
         let humidityData = new Array(20).fill(0);
-        let labels = new Array(20).fill('').map((_, i) => `T-${i}`);
-        let graphMode = "both";
+        let recordedData = [];
 
-        const tempCtx = document.getElementById('temperatureChart').getContext('2d');
-        const humidityCtx = document.getElementById('humidityChart').getContext('2d');
-
-        const tempChart = new Chart(tempCtx, {
+        const ctx = document.getElementById('sensorChart').getContext('2d');
+        const sensorChart = new Chart(ctx, {
             type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Temperature (°C)',
-                    data: tempData,
-                    borderColor: 'red',
-                    backgroundColor: 'rgba(255, 0, 0, 0.1)',
-                    tension: 0.1
-                }]
-            },
-            options: { scales: { y: { min: 0, max: 100 } } }
+            data: { labels: labels, datasets: [] },
+            options: { scales: { x: { title: { display: true, text: 'time' } }, y: { min: 0, max:100  } } }
         });
 
-        const humidityChart = new Chart(humidityCtx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Humidity (%)',
-                    data: humidityData,
-                    borderColor: 'blue',
-                    backgroundColor: 'rgba(0, 0, 255, 0.1)',
-                    tension: 0.1
-                }]
-            },
-            options: { scales: { y: { min: 0, max: 100 } } }
-        });
+        function updateGraphType() {
+            const type = document.getElementById("graph-select").value;
+            sensorChart.data.datasets = [];
+            if (type === "both" || type === "temperature") {
+                sensorChart.data.datasets.push({ label: 'Temperature (°C)', data: tempData, borderColor: 'red', backgroundColor: 'rgba(255, 0, 0, 0.1)', tension: 0.1 });
+            }
+            if (type === "both" || type === "humidity") {
+                sensorChart.data.datasets.push({ label: 'Humidity (%)', data: humidityData, borderColor: 'blue', backgroundColor: 'rgba(0, 0, 255, 0.1)', tension: 0.1 });
+            }
+            sensorChart.update();
+        }
 
-        function setGraphMode(mode) {
-            graphMode = mode;
-            document.getElementById('temperatureChart').style.display = (mode === 'both' || mode === 'temperature') ? 'block' : 'none';
-            document.getElementById('humidityChart').style.display = (mode === 'both' || mode === 'humidity') ? 'block' : 'none';
+        function updateChart(time, temperature, humidity) {
+            labels.shift(); tempData.shift(); humidityData.shift();
+            labels.push(time); tempData.push(temperature); humidityData.push(humidity);
+            sensorChart.update();
         }
     </script>
-
 </body>
 </html>

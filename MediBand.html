@@ -178,4 +178,14 @@
         }
 
         function updateChart(time, temperature, humidity) {
-            labels.shift(); temp
+            labels.shift(); tempData.shift(); humidityData.shift();
+            labels.push(time); tempData.push(temperature); humidityData.push(humidity);
+            sensorChart.update();
+        }
+
+        function exportCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,Time,Temperature,Humidity\n" +
+                recordedData.map(e => e.join(",")).join("\n");
+
+            let encodedUri = encodeURI(csvContent);
+            let link = document.create

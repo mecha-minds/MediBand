@@ -321,18 +321,7 @@
             }
         }
 
-        async function disconnectBLE() {
-            try {
-                if (device) {
-                    await device.gatt.disconnect();
-                    document.getElementById("connect-button").textContent = currentLang === "ja" ? "Bluetooth接続" : "Connect Bluetooth";
-                    device = null;
-                    alert(currentLang === "ja" ? "BLE切断成功！" : "Bluetooth disconnected successfully!");
-                }
-            } catch (error) {
-                console.error(error);
-                alert(currentLang === "ja" ? "BLE切断に失敗しました。" : "Failed to disconnect Bluetooth.");
-            }
+        
     </script>
 </body>
 </html>

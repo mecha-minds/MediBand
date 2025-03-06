@@ -41,7 +41,7 @@
     </div>
     <script>
         let currentLang = "ja";
-        let BLEcond = "on";
+        let BLEcond = "off";
         let device = null;
         let tempData = new Array(20).fill(0);
         let humidityData = new Array(20).fill(0);
@@ -54,7 +54,7 @@
                 document.getElementById("description").textContent = "Displaying current temperature and humidity.";
                 document.getElementById("temp-label").textContent = "Temperature: ";
                 document.getElementById("humidity-label").textContent = "Humidity: ";
-                document.getElementById("connect-button").textContent = BLEcond === "on" ? "Connect Bluetooth" : "Disconnect Bluetooth";
+                document.getElementById("connect-button").textContent = BLEcond === "off" ? "Connect Bluetooth" : "Disconnect Bluetooth";
                 document.getElementById("lang-button").textContent = "日本語へ切り替え";
                 document.getElementById("both").textContent = "Both";
                 document.getElementById("temperature-only").textContent = "Temperature";
@@ -66,7 +66,7 @@
                 document.getElementById("description").textContent = "現在の温度と湿度を表示します。";
                 document.getElementById("temp-label").textContent = "温度: ";
                 document.getElementById("humidity-label").textContent = "湿度: ";
-                document.getElementById("connect-button").textContent = BLEcond === "on" ? "Bluetooth 接続" : "Bluetooth 切断";
+                document.getElementById("connect-button").textContent = BLEcond === "off" ? "Bluetooth 接続" : "Bluetooth 切断";
                 document.getElementById("lang-button").textContent = "Switch to English";
                 document.getElementById("both").textContent = "両方";
                 document.getElementById("temperature-only").textContent = "温度";
@@ -104,7 +104,8 @@
             if (device && device.gatt.connected) {
                 device.gatt.disconnect();
                 alert("Bluetooth接続を切断しました。");
-                BLEcond = "on";
+                BLEcond = "off";
+                document.getElementById("connect-button").textContent = currentLang = "ja" ? "Bluetooth 接続" : "Connect Bluetooth";
                 return;
             }
             try {
@@ -138,8 +139,8 @@
                     }
                 });
                 await characteristic.startNotifications();
-                BLEcond = "off";
-                document.getElementById("connect-button").textContent = BLEcond === "on" ? "Connect Bluetooth" : "Disconnect Bluetooth";
+                BLEcond = "on";
+                document.getElementById("connect-button").textContent = currentLang = "ja" ? "Bluetooth 切断" : "Disconnect Bluetooth";
                 alert("Bluetooth接続成功！");
             } catch (error) {
                 console.error(error);

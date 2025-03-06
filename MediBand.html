@@ -26,16 +26,17 @@
     <p><strong id="temp-label">温度:</strong> <span id="temp">--</span>°C</p>
     <p><strong id="humidity-label">湿度:</strong> <span id="humidity">--</span>%</p>
 
-    <button id="connect-button" onclick="toggleBluetoothConnection()">Bluetooth接続</button>
+    <button id="connect-button" onclick="selectBLEDevice()">Bluetooth接続</button>
+    <button id="log-button" onclick="toggleLogging()">記録開始</button>
     <button id="export-button" onclick="exportCSV()">CSVダウンロード</button>
     <button id="lang-button" onclick="toggleLanguage()">Switch to English</button>
 
     <div>
-        <label id="graph-botton">グラフ表示</label>
-        <select id="graph-select" onchange="updateGraphType()">
-            <option value="both">温度と湿度</option>
-            <option value="temperature-only">温度のみ</option>
-            <option value="humidity-only">湿度のみ</option>
+        <label id = "graph-botton">グラフ表示</label>
+        <select> id = "graph-select" onchange = "updateGraphType()">
+            <option id = "both", value = "both">温度と湿度</option>
+            <option id = "temperature-only", value = "temperature-only">温度のみ</option>
+            <option id = "humidity-only", value = "humidity-only">湿度のみ</option>
         </select>
     </div>
 
@@ -45,7 +46,7 @@
 
     <script>
         let currentLang = "ja";
-        let device = null;
+        let logging = false;
         let tempData = new Array(20).fill(0);
         let humidityData = new Array(20).fill(0);
         let labels = new Array(20).fill("--");
@@ -59,14 +60,13 @@
                 document.getElementById("temp-label").textContent = "Temperature: ";
                 document.getElementById("humidity-label").textContent = "Humidity: ";
                 document.getElementById("connect-button").textContent = "Connect Bluetooth";
+                document.getElementById("log-button").textContent = "Start Logging";
                 document.getElementById("export-button").textContent = "Download CSV";
                 document.getElementById("lang-button").textContent = "日本語へ切り替え";
+                document.getElementById("both").textContent = "Both";
+                document.getElementById("temperature-only").textContent = "Temperature";
+                document.getElementById("humidity-only").textContent = "Humidity";
                 document.getElementById("graph-botton").textContent = "Show Graph";
-                document.getElementById("graph-select").innerHTML = `
-                    <option value="both">Both</option>
-                    <option value="temperature-only">Temperature</option>
-                    <option value="humidity-only">Humidity</option>
-                `;
             } else {
                 currentLang = "ja";
                 document.getElementById("title").textContent = "温度と湿度";
@@ -74,36 +74,34 @@
                 document.getElementById("temp-label").textContent = "温度: ";
                 document.getElementById("humidity-label").textContent = "湿度: ";
                 document.getElementById("connect-button").textContent = "Bluetooth接続";
+                document.getElementById("log-button").textContent = "記録開始";
                 document.getElementById("export-button").textContent = "CSVダウンロード";
+                document.getElementById("both").textContent = "両方";
+                document.getElementById("temperature-only").textContent = "温度";
+                document.getElementById("humidity-only").textContent = "湿度";
                 document.getElementById("graph-botton").textContent = "グラフを表示";
-                document.getElementById("graph-select").innerHTML = `
-                    <option value="both">温度と湿度</option>
-                    <option value="temperature-only">温度のみ</option>
-                    <option value="humidity-only">湿度のみ</option>
-                `;
             }
         }
 
-        async function toggleBluetoothConnection() {
-            if (device) {
-                await disconnectBLE();
-            } else {
-                await selectBLEDevice();
-            }
+        function toggleLogging() {
+            logging = !logging;
+            document.getElementById("log-button").textContent = logging ? 
+                (currentLang === "ja" ? "記録停止" : "Stop Logging") : 
+                (currentLang === "ja" ? "記録開始" : "Start Logging");
         }
 
         async function selectBLEDevice() {
             try {
-                device = await navigator.bluetooth.requestDevice({
+                const device = await navigator.bluetooth.requestDevice({
                     filters: [{ name: "Smart Bandage" }],
                     optionalServices: [
-                        "6e400001-b5a3-f393-e0a9-e50e24dcca9e",
-                        "0000180d-0000-1000-8000-00805f9b34fb",
-                        "0000181a-0000-1000-8000-00805f9b34fb"
+                        "6e400001-b5a3-f393-e0a9-e50e24dcca9e", 
+                        "0000180d-0000-1000-8000-00805f9b34fb", 
+                        "0000181a-0000-1000-8000-00805f9b34fb"  
                     ]
                 });
 
-                await connectToBLE(device);
+                connectToBLE(device);
             } catch (error) {
                 console.error(error);
                 alert(currentLang === "ja" ? "デバイス選択がキャンセルされました。" : "Device selection was canceled.");
@@ -130,12 +128,14 @@
                         document.getElementById("temp").textContent = temperature + "°C";
                         document.getElementById("humidity").textContent = humidity + "%";
 
-                        updateChart(now, temperature, humidity);
+                        if (logging) {
+                            updateChart(now, temperature, humidity);
+                            recordedData.push([now, temperature, humidity]);
+                        }
                     }
                 });
 
                 await characteristic.startNotifications();
-                document.getElementById("connect-button").textContent = currentLang === "ja" ? "Bluetooth切断" : "Disconnect Bluetooth";
                 alert(currentLang === "ja" ? "BLE接続成功！" : "Bluetooth connected successfully!");
 
             } catch (error) {
@@ -144,35 +144,21 @@
             }
         }
 
-        async function disconnectBLE() {
-            try {
-                if (device) {
-                    await device.gatt.disconnect();
-                    document.getElementById("connect-button").textContent = currentLang === "ja" ? "Bluetooth接続" : "Connect Bluetooth";
-                    device = null;
-                    alert(currentLang === "ja" ? "BLE切断成功！" : "Bluetooth disconnected successfully!");
-                }
-            } catch (error) {
-                console.error(error);
-                alert(currentLang === "ja" ? "BLE切断に失敗しました。" : "Failed to disconnect Bluetooth.");
-            }
-        }
-
-        const ctx = document.getElementById('sensorChart').getContext('2d');
+       const ctx = document.getElementById('sensorChart').getContext('2d');
         const sensorChart = new Chart(ctx, {
             type: 'line',
             data: { labels: labels, datasets: [] },
-            options: { scales: { x: { title: { display: true, text: 'time' } }, y: { min: 0, max: 100 } } }
+            options: { scales: { x: { title: { display: true, text: 'time' } }, y: { min: 0, max:100  } } }
         });
 
         function updateGraphType() {
             const type = document.getElementById("graph-select").value;
             sensorChart.data.datasets = [];
             if (type === "both" || type === "temperature-only") {
-                sensorChart.data.datasets.push({ label: currentLang === "ja" ? '温度 (°C)' : 'Temperature (°C)', data: tempData, borderColor: 'red', backgroundColor: 'rgba(255, 0, 0, 0.1)', tension: 0.1 });
+                sensorChart.data.datasets.push({ label: 'Temperature (°C)', data: tempData, borderColor: 'red', backgroundColor: 'rgba(255, 0, 0, 0.1)', tension: 0.1 });
             }
             if (type === "both" || type === "humidity-only") {
-                sensorChart.data.datasets.push({ label: currentLang === "ja" ? '湿度 (%)' : 'Humidity (%)', data: humidityData, borderColor: 'blue', backgroundColor: 'rgba(0, 0, 255, 0.1)', tension: 0.1 });
+                sensorChart.data.datasets.push({ label: 'Humidity (%)', data: humidityData, borderColor: 'blue', backgroundColor: 'rgba(0, 0, 255, 0.1)', tension: 0.1 });
             }
             sensorChart.update();
         }
@@ -188,4 +174,13 @@
                 recordedData.map(e => e.join(",")).join("\n");
 
             let encodedUri = encodeURI(csvContent);
-            let link = document.create
+            let link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "temperature_humidity_data.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+    </script>
+
+</body>
+</html>

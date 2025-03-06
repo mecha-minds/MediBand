@@ -135,31 +135,31 @@
         }
 
        const ctx = document.getElementById('sensorChart').getContext('2d');
-        const sensorChart = new Chart(ctx, {
-            type: 'line',
-            data: { labels: labels, datasets: [] },
-            options: { scales: { x: { title: { display: true, text: 'time' } }, y: { min: 0, max:100  } } }
-        });
+       const sensorChart = new Chart(ctx, {
+           type: 'line',
+           data: { labels: labels, datasets: [] },
+           options: { scales: { x: { title: { display: true, text: 'time' } }, y: { min: 0, max:100  } } }
+       });
 
-        function updateGraphType() {
-            const type = document.getElementById("graph-select").value;
-            sensorChart.data.datasets = [];
-            if (type === "both" || type === "temperature-only") {
-                sensorChart.data.datasets.push({ label: 'Temperature (°C)', data: tempData, borderColor: 'red', backgroundColor: 'rgba(255, 0, 0, 0.1)', tension: 0.1 });
-            }
-            if (type === "both" || type === "humidity-only") {
+       function updateGraphType() {
+           const type = document.getElementById("graph-select").value;
+           sensorChart.data.datasets = [];
+           if (type === "both" || type === "temperature-only") {
+               sensorChart.data.datasets.push({ label: 'Temperature (°C)', data: tempData, borderColor: 'red', backgroundColor: 'rgba(255, 0, 0, 0.1)', tension: 0.1 });
+           }
+           if (type === "both" || type === "humidity-only") {
                 sensorChart.data.datasets.push({ label: 'Humidity (%)', data: humidityData, borderColor: 'blue', backgroundColor: 'rgba(0, 0, 255, 0.1)', tension: 0.1 });
-            }
-            sensorChart.update();
-        }
+           }
+           sensorChart.update();
+       }
 
-        function updateChart(time, temperature, humidity) {
-            labels.shift(); tempData.shift(); humidityData.shift();
-            labels.push(time); tempData.push(temperature); humidityData.push(humidity);
-            sensorChart.update();
-        }
+       function updateChart(time, temperature, humidity) {
+           labels.shift(); tempData.shift(); humidityData.shift();
+           labels.push(time); tempData.push(temperature); humidityData.push(humidity);
+           sensorChart.update();
+       }
 
-        function exportCSV() {
+       function exportCSV() {
             let csvContent = "data:text/csv;charset=utf-8,Time,Temperature,Humidity\n" +
                 recordedData.map(e => e.join(",")).join("\n");
 

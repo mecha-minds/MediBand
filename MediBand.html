@@ -111,7 +111,7 @@
                 device.gatt.disconnect();
                 alert("Bluetooth接続を切断しました。");
                 BLEcond = "off";
-                document.getElementById("connect-button").textContent = currentLang = "ja" ? "Bluetooth 接続" : "Connect Bluetooth";
+                document.getElementById("connect-button").textContent = currentLang === "ja" ? "Bluetooth 接続" : "Connect Bluetooth";
                 return;
             }
             try {
@@ -148,7 +148,7 @@
                 });
                 await characteristic.startNotifications();
                 BLEcond = "on";
-                document.getElementById("connect-button").textContent = currentLang = "ja" ? "Bluetooth 切断" : "Disconnect Bluetooth";
+                document.getElementById("connect-button").textContent = currentLang === "ja" ? "Bluetooth 切断" : "Disconnect Bluetooth";
                 alert("Bluetooth接続成功！");
             } catch (error) {
                 console.error(error);

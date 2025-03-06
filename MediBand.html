@@ -225,74 +225,62 @@
         let humidityData = new Array(20).fill(0);
         let labels = new Array(20).fill("--");
 
-        function toggleLanguage(){
-            if (currentLang == "ja"){
+        function toggleLanguage() {
+            if (currentLang == "ja") {
                 currentLang = "en";
                 document.getElementById("title").textContent = "Temperature & Humidity";
                 document.getElementById("description").textContent = "Displaying current temperature and humidity.";
                 document.getElementById("temp-label").textContent = "Temperature: ";
                 document.getElementById("humidity-label").textContent = "Humidity: ";
-                document.getElementById("connect-button").textContent = BLEcond === "on" ? "Connect Bluetooth" : "Disconnect Bluetooth";
                 document.getElementById("lang-button").textContent = "日本語へ切り替え";
-                document.getElementById("both").textContent = "Both";
-                document.getElementById("temperature-only").textContent = "Temperature";
-                document.getElementById("humidity-only").textContent = "Humidity";
-                document.getElementById("graph-botton").textContent = "Show Graph";
-        }else {
+                document.getElementById("graph-on").textContent = "Show Graph";
+                document.getElementById("graph-select").options[0].textContent = "Both";
+                document.getElementById("graph-select").options[1].textContent = "Temperature";
+                document.getElementById("graph-select").options[2].textContent = "Humidity";
+            } else {
                 currentLang = "ja";
                 document.getElementById("title").textContent = "温度と湿度";
                 document.getElementById("description").textContent = "現在の温度と湿度を表示します。";
                 document.getElementById("temp-label").textContent = "温度: ";
                 document.getElementById("humidity-label").textContent = "湿度: ";
-                document.getElementById("connect-button").textContent = BLEcond === "on" ? "Bluetooth 接続" : "Bluetooth 切断";
-                document.getElementById("both").textContent = "両方";
-                document.getElementById("temperature-only").textContent = "温度";
-                document.getElementById("humidity-only").textContent = "湿度";
-                document.getElementById("graph-botton").textContent = "グラフを表示";
+                document.getElementById("lang-button").textContent = "Switch to English";
+                document.getElementById("graph-on").textContent = "グラフ表示";
+                document.getElementById("graph-select").options[0].textContent = "温度と湿度";
+                document.getElementById("graph-select").options[1].textContent = "温度のみ";
+                document.getElementById("graph-select").options[2].textContent = "湿度のみ";
             }
+            updateConnectButtonLabel();
         }
 
-        const ctx = document.getElementById('sensorChart').getContext('2d');
-        const sensorChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    { label: 'Temperature (°C)', data: tempData, borderColor: 'red', backgroundColor: 'rgba(255, 0, 0, 0.1)', tension: 0.1 },
-                    { label: 'Humidity (%)', data: humidityData, borderColor: 'blue', backgroundColor: 'rgba(0, 0, 255, 0.1)', tension: 0.1 }
-                ]
-            },
-            options: { scales: { y: { min: 0, max: 100 } } }
-        });
-
-        function updateGraphType() {
-            const type = document.getElementById("graph-select").value;
-            sensorChart.data.datasets = [];
-            if (type === "both" || type === "temperature") {
-                sensorChart.data.datasets.push({ label: 'Temperature (°C)', data: tempData, borderColor: 'red', backgroundColor: 'rgba(255, 0, 0, 0.1)', tension: 0.1 });
+        function updateConnectButtonLabel() {
+            const connectButton = document.getElementById("connect-button");
+            if (currentLang === "ja") {
+                connectButton.textContent = BLEcond === "on" ? "Bluetooth接続" : "Bluetooth切断";
+            } else {
+                connectButton.textContent = BLEcond === "on" ? "Connect Bluetooth" : "Disconnect Bluetooth";
             }
-            if (type === "both" || type === "humidity") {
-                sensorChart.data.datasets.push({ label: 'Humidity (%)', data: humidityData, borderColor: 'blue', backgroundColor: 'rgba(0, 0, 255, 0.1)', tension: 0.1 });
-            }
-            sensorChart.update();
         }
 
         async function selectBLEDevice() {
+            const connectButton = document.getElementById("connect-button");
+            
             if (device && device.gatt.connected) {
                 device.gatt.disconnect();
-                alert("Bluetooth接続を切断しました。");
+                alert(currentLang === "ja" ? "Bluetooth接続を切断しました。" : "Bluetooth disconnected.");
                 BLEcond = "on";
+                updateConnectButtonLabel();
                 return;
             }
+        
             try {
                 device = await navigator.bluetooth.requestDevice({
                     filters: [{ name: "Smart Bandage" }],
                     optionalServices: ["6e400001-b5a3-f393-e0a9-e50e24dcca9e"]
                 });
-                connectToBLE(device);
+                await connectToBLE(device);
             } catch (error) {
                 console.error(error);
-                alert("デバイス選択がキャンセルされました。");
+                alert(currentLang === "ja" ? "デバイス選択がキャンセルされました。" : "Device selection was canceled.");
             }
         }
 
@@ -301,6 +289,7 @@
                 const server = await device.gatt.connect();
                 const service = await server.getPrimaryService("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
                 const characteristic = await service.getCharacteristic("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
+        
                 characteristic.addEventListener("characteristicvaluechanged", event => {
                     let decoder = new TextDecoder("utf-8");
                     let data = decoder.decode(event.target.value).trim();
@@ -314,16 +303,19 @@
                         sensorChart.update();
                     }
                 });
+        
                 await characteristic.startNotifications();
                 BLEcond = "off";
-                alert("Bluetooth接続成功！");
+                updateConnectButtonLabel();
+                alert(currentLang === "ja" ? "Bluetooth接続成功！" : "Bluetooth connection successful!");
             } catch (error) {
                 console.error(error);
-                alert("Bluetooth接続に失敗しました。");
+                alert(currentLang === "ja" ? "Bluetooth接続に失敗しました。" : "Failed to connect Bluetooth.");
             }
         }
 
+
         
-    </script>
+        </script>
 </body>
 </html>

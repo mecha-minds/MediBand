@@ -11,52 +11,74 @@
         .logo-container { margin-bottom: 20px; }
         .logo { width: 150px; height: auto; }
         button { padding: 10px; font-size: 16px; margin: 10px; cursor: pointer; }
-        .chart-container { width: 50%; margin: auto; display: none; }
+        .chart-container { width: 50%; margin: auto; }
     </style>
 </head>
 <body>
+
     <div class="logo-container">
         <img src="mediband_logo.png" alt="Product Logo" class="logo">
     </div>
 
-    <h1>温度と湿度</h1>
-    <button onclick="showGraph('temp')">温度のみ</button>
-    <button onclick="showGraph('humidity')">湿度のみ</button>
-    <button onclick="showGraph('both')">両方</button>
-    
-    <div class="chart-container" id="tempChartContainer">
-        <canvas id="tempChart"></canvas>
+    <h1 id="title">温度と湿度</h1>
+    <p id="description">現在の温度と湿度を表示します。</p>
+
+    <button onclick="setGraphMode('both')">温度と湿度</button>
+    <button onclick="setGraphMode('temperature')">温度のみ</button>
+    <button onclick="setGraphMode('humidity')">湿度のみ</button>
+
+    <div class="chart-container">
+        <canvas id="temperatureChart"></canvas>
     </div>
-    
-    <div class="chart-container" id="humidityChartContainer">
+    <div class="chart-container">
         <canvas id="humidityChart"></canvas>
     </div>
-    
+
     <script>
-        let labels = Array.from({length: 20}, (_, i) => i + 1);
-        let tempData = Array(20).fill(null).map(() => Math.random() * 10 + 20);
-        let humidityData = Array(20).fill(null).map(() => Math.random() * 30 + 40);
-        
-        const tempCtx = document.getElementById('tempChart').getContext('2d');
+        let tempData = new Array(20).fill(0);
+        let humidityData = new Array(20).fill(0);
+        let labels = new Array(20).fill('').map((_, i) => `T-${i}`);
+        let graphMode = "both";
+
+        const tempCtx = document.getElementById('temperatureChart').getContext('2d');
+        const humidityCtx = document.getElementById('humidityChart').getContext('2d');
+
         const tempChart = new Chart(tempCtx, {
             type: 'line',
-            data: { labels, datasets: [{ label: 'Temperature (°C)', data: tempData, borderColor: 'red', backgroundColor: 'rgba(255, 0, 0, 0.1)' }] },
-            options: { scales: { y: { min: 0, max: 50 } } }
-        });
-        
-        const humidityCtx = document.getElementById('humidityChart').getContext('2d');
-        const humidityChart = new Chart(humidityCtx, {
-            type: 'line',
-            data: { labels, datasets: [{ label: 'Humidity (%)', data: humidityData, borderColor: 'blue', backgroundColor: 'rgba(0, 0, 255, 0.1)' }] },
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Temperature (°C)',
+                    data: tempData,
+                    borderColor: 'red',
+                    backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                    tension: 0.1
+                }]
+            },
             options: { scales: { y: { min: 0, max: 100 } } }
         });
-        
-        function showGraph(type) {
-            document.getElementById('tempChartContainer').style.display = (type === 'temp' || type === 'both') ? 'block' : 'none';
-            document.getElementById('humidityChartContainer').style.display = (type === 'humidity' || type === 'both') ? 'block' : 'none';
+
+        const humidityChart = new Chart(humidityCtx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Humidity (%)',
+                    data: humidityData,
+                    borderColor: 'blue',
+                    backgroundColor: 'rgba(0, 0, 255, 0.1)',
+                    tension: 0.1
+                }]
+            },
+            options: { scales: { y: { min: 0, max: 100 } } }
+        });
+
+        function setGraphMode(mode) {
+            graphMode = mode;
+            document.getElementById('temperatureChart').style.display = (mode === 'both' || mode === 'temperature') ? 'block' : 'none';
+            document.getElementById('humidityChart').style.display = (mode === 'both' || mode === 'humidity') ? 'block' : 'none';
         }
-        
-        showGraph('both');
     </script>
+
 </body>
 </html>

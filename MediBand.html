@@ -139,6 +139,7 @@
                 });
                 await characteristic.startNotifications();
                 BLEcond = "off";
+                document.getElementById("connect-button").textContent = BLEcond === "on" ? "Connect Bluetooth" : "Disconnect Bluetooth";
                 alert("Bluetooth接続成功！");
             } catch (error) {
                 console.error(error);

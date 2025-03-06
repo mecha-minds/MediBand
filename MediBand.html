@@ -193,10 +193,17 @@
     </style>
 </head>
 <body>
-    <h1>温度と湿度</h1>
+    <h1 id = "title">温度と湿度</h1>
+    <p id = "description">現在の温度と湿度を表示します。</p>
+
+    <p><strong id="temp-label">温度:</strong> <span id="temp">--</span>°C</p>
+    <p><strong id="humidity-label">湿度:</strong> <span id="humidity">--</span>%</p>
+
     <button id="connect-button" onclick="selectBLEDevice()">Bluetooth接続</button>
+    <button id="lang-button" onclick="toggleLanguage()">Switch to English</button>
+    
     <div>
-        <label>グラフ表示</label>
+        <label id = "grapgh-on">グラフ表示</label>
         <select id="graph-select" onchange="updateGraphType()">
             <option value="both">温度と湿度</option>
             <option value="temperature">温度のみ</option>
@@ -207,10 +214,38 @@
         <canvas id="sensorChart"></canvas>
     </div>
     <script>
+        let currentLang = "ja";
         let device = null;
         let tempData = new Array(20).fill(0);
         let humidityData = new Array(20).fill(0);
         let labels = new Array(20).fill("--");
+
+        function toggleLanguage(){
+            if (currentLang == "ja"){
+                currentLang = "en";
+                document.getElementById("title").textContent = "Temperature & Humidity";
+                document.getElementById("description").textContent = "Displaying current temperature and humidity.";
+                document.getElementById("temp-label").textContent = "Temperature: ";
+                document.getElementById("humidity-label").textContent = "Humidity: ";
+                document.getElementById("connect-button").textContent = "Connect Bluetooth";
+                document.getElementById("lang-button").textContent = "日本語へ切り替え";
+                document.getElementById("both").textContent = "Both";
+                document.getElementById("temperature-only").textContent = "Temperature";
+                document.getElementById("humidity-only").textContent = "Humidity";
+                document.getElementById("graph-botton").textContent = "Show Graph";
+        }else {
+                currentLang = "ja";
+                document.getElementById("title").textContent = "温度と湿度";
+                document.getElementById("description").textContent = "現在の温度と湿度を表示します。";
+                document.getElementById("temp-label").textContent = "温度: ";
+                document.getElementById("humidity-label").textContent = "湿度: ";
+                document.getElementById("connect-button").textContent = "Bluetooth接続";
+                document.getElementById("both").textContent = "両方";
+                document.getElementById("temperature-only").textContent = "温度";
+                document.getElementById("humidity-only").textContent = "湿度";
+                document.getElementById("graph-botton").textContent = "グラフを表示";
+            }
+        }
 
         const ctx = document.getElementById('sensorChart').getContext('2d');
         const sensorChart = new Chart(ctx, {

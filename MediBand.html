@@ -187,6 +187,7 @@
     <div>
         <label id="graph-on">グラフ表示</label>
         <select id="graph-select" onchange="updateGraphType()">
+            <option value="none" id="choose">選択</option>
             <option value="both" id="both">温度と湿度</option>
             <option value="temperature" id="temperature-only">温度のみ</option>
             <option value="humidity" id="humidity-only">湿度のみ</option>
@@ -217,10 +218,11 @@
                 document.getElementById("humidity-label").textContent = "Humidity: ";
                 document.getElementById("connect-button").textContent = BLEcond === "off" ? "Connect Bluetooth" : "Disconnect Bluetooth";
                 document.getElementById("lang-button").textContent = "日本語へ切り替え";
+                document.getElementById("choose").textContent = "Choose";
                 document.getElementById("both").textContent = "Both";
                 document.getElementById("temperature-only").textContent = "Temperature";
                 document.getElementById("humidity-only").textContent = "Humidity";
-                document.getElementById("graph-botton").textContent = "Show Graph";
+                document.getElementById("graph-on").textContent = "Show Graph";
         }else {
                 currentLang = "ja";
                 document.getElementById("title").textContent = "温度と湿度";
@@ -229,10 +231,11 @@
                 document.getElementById("humidity-label").textContent = "湿度: ";
                 document.getElementById("connect-button").textContent = BLEcond === "off" ? "Bluetooth 接続" : "Bluetooth 切断";
                 document.getElementById("lang-button").textContent = "Switch to English";
+                document.getElementById("choose").textContent = "選択";
                 document.getElementById("both").textContent = "両方";
                 document.getElementById("temperature-only").textContent = "温度";
                 document.getElementById("humidity-only").textContent = "湿度";
-                document.getElementById("graph-botton").textContent = "グラフを表示";
+                document.getElementById("graph-on").textContent = "グラフを表示";
             }
         }
 
@@ -260,6 +263,13 @@
         });
 
         async function selectBLEDevice() {
+            if (device && device.gatt.connected) {
+                device.gatt.disconnect();
+                alert("Bluetooth接続を切断しました。");
+                BLEcond = "off";
+                document.getElementById("connect-button").textContent = currentLang = "ja" ? "Bluetooth 接続" : "Connect Bluetooth";
+                return;
+            }
             try {
                 let device = await navigator.bluetooth.requestDevice({
                     filters: [{ name: "Smart Bandage" }],
@@ -293,6 +303,8 @@
                     }
                 });
                 await characteristic.startNotifications();
+                BLEcond = "on";
+                document.getElementById("connect-button").textContent = currentLang = "ja" ? "Bluetooth 切断" : "Disconnect Bluetooth";
                 alert("Bluetooth接続成功！");
             } catch (error) {
                 console.error(error);
